@@ -5,5 +5,5 @@ import parse._
 
 abstract class ParseTreeData extends BTeamData {
 	var tree : ParseTree = null
-	def init(pcfg : PCFG with PreProcessor with PrintablePCFG with XBar) : ParseTree 
+	def init(pcfg : PreProcessor) : ParseTree 
 }

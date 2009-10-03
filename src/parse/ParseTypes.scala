@@ -7,7 +7,8 @@ object ParseTypes {
   type Terminal = Int
   type SSPair = Tuple2[Symbol,Split]
   val Root : Symbol = 0
-  val UNK : Terminal = 0
+  val UNK : Terminal = 1
+  val Empty : Terminal = 0
   val Unsplit : Split = 0
   
   def split(s : Split) : List[Split] = {

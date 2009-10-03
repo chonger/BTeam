@@ -2,16 +2,10 @@ package parse
 
 abstract class TreeNode(val symbol : TreeSymbol)
 case class TerminalNode(override val symbol : Terminal) extends TreeNode(symbol)
+case class EmptyNode() extends TerminalNode(new EmptyTerminal)
 abstract case class NonTerminalNode(override val symbol : NonTerminal) extends TreeNode(symbol) {
   def rules : List[TreeRule]
   def children : List[TreeNode]
-  
-  /**
-  override def equals(any : Any) : Boolean = {
-    
-  }
-                               */
-  
 }
 case class ProtoTreeNode(override val symbol : NonTerminal,
                          val kids : List[TreeNode]) extends NonTerminalNode(symbol) {
@@ -33,7 +27,7 @@ case class PreTerminalNode(override val symbol : NonTerminal,
 	  for{mysplit <- symbol.splits} 
 	  yield new TerminalRule(symbol.id,mysplit,kid.symbol.id)
 	}
-	def children = List(kid)
+	def children : List[TerminalNode]= List(kid)
 }
 case class BinaryTreeNode(override val symbol : NonTerminal,
                           val left : NonTerminalNode, 
@@ -61,7 +55,7 @@ case class NonTerminal(val id : ParseTypes.Symbol) extends TreeSymbol {
 }
 case class Terminal(val id : ParseTypes.Terminal) extends TreeSymbol
 case class Root() extends NonTerminal(ParseTypes.Root)
-
+case class EmptyTerminal() extends Terminal(ParseTypes.Empty)
 
 
 abstract class TreeRule(val lhs : ParseTypes.Symbol, val split : ParseTypes.Split) 

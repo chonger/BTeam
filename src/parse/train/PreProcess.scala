@@ -2,13 +2,13 @@ package parse.train
 
 class PreProcess(data : List[ParseTreeData]) {
 	
-	var pcfg = new PCFG with PreProcessor with XBar with PrintablePCFG
+	var pcfg = new PCFG with PreProcessor with PrintablePCFG
   
 	var ind = 0
 	data.foreach(a => {a.init(pcfg)})
 
   	println("Reforming trees")
-  	data.foreach(d => pcfg.xbar(d.tree)) //reform and annotate trees
+  	//data.foreach(d => pcfg.xbar(d.tree)) //reform and annotate trees
 	
   	println("Estimating from trees")
   	data.foreach(a => pcfg.getCounts(a.tree)) //estimate data for transform
@@ -18,7 +18,7 @@ class PreProcess(data : List[ParseTreeData]) {
 	//data.foreach(t => println("TREE\n" + pcfg.printTree(t.tree)))
  
 	println("Re-estimating data")
-	pcfg.clear //we have changes the trees, so clear estimated data
+	pcfg.clear //we have changed the trees, so clear estimated data
 	data.foreach(a => pcfg.getCounts(a.tree)) //collect estimation data
  
 	println("Initializing rules")

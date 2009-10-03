@@ -7,9 +7,9 @@ abstract class PCFG() {
   var symbolStrings = List[String]("ROOT")
   val symbolIDs = new HashMap[String,ParseTypes.Symbol]()
   symbolIDs += ("ROOT" -> ParseTypes.Root)
-  var terminalStrings = List[String]("ROOT")
+  var terminalStrings = List[String]("Empty","UNK")
   val terminalIDs = HashMap[String,ParseTypes.Terminal]()
-  terminalIDs += ("UNK" -> ParseTypes.UNK)
+  terminalIDs += ("UNK" -> ParseTypes.UNK, "Empty" -> ParseTypes.Empty)
   def clear = rules.clear
 }
 
@@ -17,17 +17,25 @@ trait PreProcessor extends PCFG {
   var nextSymID : ParseTypes.Symbol = ParseTypes.Root
   var nextTermID : ParseTypes.Terminal = ParseTypes.UNK
   
+  def doTransform(data : List[ParseTreeData]) = {
+    transform(data)
+    reproc(data)
+  }
+  
+  def transform(data : List[ParseTreeData]) = {}
+  def revert(data : List[ParseTreeData]) = {}
+  
   def addSymbol(s : String) = symbolIDs.getOrElseUpdate(s,{
 	  //println("adding symbol " + s)
-	  symbolStrings =  (symbolStrings.reverse.::(s)).reverse
+	  symbolStrings =  (symbolStrings.reverse.::(s)).reverse //TODO this sucks
 	  NonTerminal.splits = NonTerminal.splits ++ List(List(ParseTypes.Unsplit))
 	  nextSymID += 1
 	  nextSymID
   	})
   
   def addTerm(s : String) : ParseTypes.Symbol = terminalIDs.getOrElseUpdate(s,{
-	  //println("adding terminal " + s)
-	  terminalStrings =  (terminalStrings.reverse.::(s)).reverse
+	  //println("adding terminal " + s + " " + (nextTermID + 1))
+	  terminalStrings =  (terminalStrings.reverse.::(s)).reverse //TODO see above note of suckage
 	  nextTermID += 1
 	  nextTermID
   	})
@@ -35,13 +43,27 @@ trait PreProcessor extends PCFG {
   val terminalCounts = HashMap[ParseTypes.Symbol,Int]() 
   val nonterminalCounts = HashMap[ParseTypes.Symbol,Int]()
   val ruleCounts = HashMap[TreeRule,Int]()
-   
+  
+  def reproc(data : List[ParseTreeData]) = {
+    terminalCounts.clear
+  	nonterminalCounts.clear
+  	ruleCounts.clear
+  	data.foreach(d => getCounts(d.tree))
+    initRules
+  }
+  
+  def init(data : List[ParseTreeData]) = {
+    clear
+    data.foreach(d=> d.init(this))
+    reproc(data)
+  }
+  
   override def clear = {
     super.clear
   	terminalCounts.clear
   	nonterminalCounts.clear
   	ruleCounts.clear
-  } 
+  }
   
   def getCounts(tree : ParseTree) = {
 	  recGetCounts(tree.root)
@@ -70,6 +92,15 @@ trait PreProcessor extends PCFG {
 	  }
   }
   
+  //used when all trees are loaded in to estimate pcfg probabilities
+  def initRules() = {
+	  rules.clear
+	  ruleCounts.foreach(a => rules += (a._1 -> a._2.toDouble / 
+                                   nonterminalCounts(a._1.lhs).toDouble))   
+  }
+  
+  /**
+   This stuff is needed, but not yet
   //remove all Terminals not in the set of most common n Terminals
   def takeTopNTerminals(n : Int, trees : List[ParseTree]) = {
 	  var sortedTerminals = terminalCounts.toList sort ((a,b) => a._2 > b._2)
@@ -83,13 +114,8 @@ trait PreProcessor extends PCFG {
   def takeTermsWithCount(n : Int) = {
 	  terminalCounts.filterKeys(terminalCounts(_) < n).map(terminalCounts -= _._1)
   }
+  */
   
-  //used when all trees are loaded in to estimate pcfg probabilities
-  def initRules() = {
-	  rules.clear
-	  ruleCounts.foreach(a => rules += (a._1 -> a._2.toDouble / 
-                                   nonterminalCounts(a._1.lhs).toDouble))
-      
-  }
+  
 }
   

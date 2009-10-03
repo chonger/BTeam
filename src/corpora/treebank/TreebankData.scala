@@ -2,34 +2,37 @@ package corpora.treebank
 
 import java.io.{File,FileWriter,BufferedWriter}
 import parse._
+import io.Source
 
 class TreebankParseException(val raw : String) extends DataParseException
 
 object TreebankData {
-	def read(file : File) : List[TreebankData] = {
-	  List[TreebankData]()
+  
+	def read(filename : String) : List[TreebankData] = {
+	  print("Reading " + filename + " for treebank format trees ... ")
+	  val filedata = Source.fromFile(filename).getLines
+	  val treestrs = (List[String]() /: filedata)((a,b) => if(b.charAt(0) != '(') (a(0) + b) :: a.drop(1) else b :: a)
+	  println("Got " + treestrs.length + " trees")
+	  treestrs.map(new TreebankData(_))
 	} 
+ 
+	def write(filename : String, data : List[TreebankData]) = {
+		var bw = new BufferedWriter(new FileWriter(new File(filename)))
+		data.foreach(d => bw.write(d.tree.toString))
+		bw.close
+	}
 }
 
 class TreebankData(raw : String) extends ParseTreeData {
- 
-	def init(pcfg : PCFG with PreProcessor with PrintablePCFG with XBar) : ParseTree = {
-		//println("INIT" + raw)
+	override def init(pcfg : PreProcessor) : ParseTree = {
 		val myRaw = "\n".r.replaceAllIn(raw,"")
 	    tree = new ParseTree
-		try {
-	    	tree.root = parseRaw(myRaw.toList,0,pcfg)._1 //leave the real raw string alone
-	    	pcfg.printTree(tree)
+		try {			
+	    	tree.root = parseRaw(myRaw.toList,0,pcfg)._1.asInstanceOf[NonTerminalNode] //leave the real raw string alone
 	    	tree
 	    } catch {
 	    	case e :DataParseException => tree = null; throw new TreebankParseException(raw)
 	    }	    
-	}
- 
-	override def write(file : File) {
-		var bw = new BufferedWriter(new FileWriter(file))
-		bw.write(tree.toString)
-		bw.close
 	}
   
     def parseRaw(raw : List[char],index : Int,pcfg : PCFG with PreProcessor) : (TreeNode,Int) = {
@@ -50,7 +53,7 @@ class TreebankData(raw : String) extends ParseTreeData {
 				case ')' =>{
 				  if(term.length > 0) {
 					  var newT = new TerminalNode(Terminal(pcfg.addTerm(term)))
-					  kids ::= newT
+					  return (PreTerminalNode(NonTerminal(pcfg.addSymbol(symbol)),newT),i)
 				  }
 				  var nt : TreeNode = null
 				  if(symbol == "ROOT") {

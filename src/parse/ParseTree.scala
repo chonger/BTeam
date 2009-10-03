@@ -1,9 +1,9 @@
 package parse
 
 class ParseTree {
-	var root : TreeNode = null
+	var root : NonTerminalNode = null
  
-	def this(aroot : TreeNode) = {this() ; root = aroot}
+	def this(aroot : NonTerminalNode) = {this() ; root = aroot}
  
  	def invalidateNodelists() = {storedNodes = null} 
  	private var storedNodes : List[TreeNode] = null 

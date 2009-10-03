@@ -66,8 +66,9 @@ trait PrintablePCFG extends PCFG {
     	ret += (recPrintTree(nt.children(0),offset + spcstr) /: nt.children.drop(1))((a,b) => {
     	    a + "\n" + offset + spcstr + recPrintTree(b,offset + spcstr)})
     	ret + ")"
-      case TerminalNode(symbol) =>
+      case TerminalNode(symbol) => {
         terminalStrings(symbol.id)  
+      }
     }
   }
 }
