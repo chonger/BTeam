@@ -10,6 +10,9 @@ object ParseTypes {
   val UNK : Terminal = 1
   val Empty : Terminal = 0
   val Unsplit : Split = 0
+  val RootString : String = "ROOT"
+  val EmptyString : String = "EPSILON"
+  val UnkString : String = "UNK"
   
   def split(s : Split) : List[Split] = {
     List((s * 2 + 1).toChar,(s * 2 + 2).toChar)
@@ -21,6 +24,10 @@ object ParseTypes {
   
   def merge(a : Split) : Split = {
     (a / 2).toChar
+  }
+  
+  def parseSplit(s : String) : Split = {
+    Integer.parseInt(s).toChar
   }
   
 }

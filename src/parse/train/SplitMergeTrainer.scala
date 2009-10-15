@@ -19,21 +19,23 @@ class SplitMergeTrainer(data : List[ParseTreeData],
   def run(args : List[String]) = {       
 	for{i <- 1 to smIterations} {
 		ioAlg.run(Nil)
-		splitSymbols
-		splitRules()
-		merge()
+		//splitSymbols
+		//splitRules()
+		//merge()
 	}
   }  
   
   def getMergeList() = {
+    /**
     NonTerminal.splits.map(sl => {
     	for{s1 <- sl
     		s2 <- sl
     		if ParseTypes.isPair(s1,s2)}
     	yield {(s1,s2)}
     })
+                        */
   }
-  
+  /**
   def merge() = {
     println("MERGING")
     val delta = new HashMap[(ParseTypes.Symbol,ParseTypes.Split,ParseTypes.Split),Double]()
@@ -114,7 +116,7 @@ class SplitMergeTrainer(data : List[ParseTreeData],
     pcfg.rules.clear
     newRules.foreach(pcfg.rules += _)
   }
-  
+  */
   val rand = new java.util.Random(12345)
   //random number between _+.02
   def randomNoise() = (rand.nextDouble * 4.0 - 2.0) / 100.0 + 1.0

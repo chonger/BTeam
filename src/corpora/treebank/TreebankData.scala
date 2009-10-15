@@ -3,6 +3,8 @@ package corpora.treebank
 import java.io.{File,FileWriter,BufferedWriter}
 import parse._
 import io.Source
+import java.io.StringReader
+import java.lang.StringBuffer
 
 class TreebankParseException(val raw : String) extends DataParseException
 
@@ -16,68 +18,55 @@ object TreebankData {
 	  treestrs.map(new TreebankData(_))
 	} 
  
-	def write(filename : String, data : List[TreebankData]) = {
+	def write(filename : String, data : List[TreebankData], pcfg : PCFG with PrintablePCFG) = {
 		var bw = new BufferedWriter(new FileWriter(new File(filename)))
-		data.foreach(d => bw.write(d.tree.toString))
+		data.foreach(d => bw.write("\\s+".r.replaceAllIn(pcfg.printTree(d.tree)," ") + "\n"))
 		bw.close
 	}
 }
 
 class TreebankData(raw : String) extends ParseTreeData {
-	override def init(pcfg : PreProcessor) : ParseTree = {
-		val myRaw = "\n".r.replaceAllIn(raw,"")
-	    tree = new ParseTree
-		try {			
-	    	tree.root = parseRaw(myRaw.toList,0,pcfg)._1.asInstanceOf[NonTerminalNode] //leave the real raw string alone
-	    	tree
-	    } catch {
-	    	case e :DataParseException => tree = null; throw new TreebankParseException(raw)
-	    }	    
+	override def init(pcfg : PreProcessor) : ParseTree = {	
+		tree = new ParseTree
+		tree.root = readTree(pcfg)
+		//println(pcfg.asInstanceOf[PrintablePCFG].printTree(tree))
+		tree
 	}
-  
-    def parseRaw(raw : List[char],index : Int,pcfg : PCFG with PreProcessor) : (TreeNode,Int) = {
-		var i = index
-		var symbolDone = false
-		var symbol = ""
-		var kids = List[TreeNode]()
-		var term = ""
-		while(i < raw.length) {
-			raw(i) match {
-				case '(' => {
-				  if(symbol != "") {
-					  var (n,ind) = parseRaw(raw,i,pcfg)
-					  i = ind
-					  kids ::= n
-				  }
-				}
-				case ')' =>{
-				  if(term.length > 0) {
-					  var newT = new TerminalNode(Terminal(pcfg.addTerm(term)))
-					  return (PreTerminalNode(NonTerminal(pcfg.addSymbol(symbol)),newT),i)
-				  }
-				  var nt : TreeNode = null
-				  if(symbol == "ROOT") {
-					  nt = new ProtoTreeNode(Root(),kids.reverse)
-				  } else {
-					  nt = new ProtoTreeNode(NonTerminal(pcfg.addSymbol(symbol)),kids.reverse)
-				  }
-				  return (nt,i)
-				}	
-				case ' ' => {
-					if(symbol.length > 0)
-						symbolDone = true
-				}
-				case c => {
-					if(symbolDone)
-						term += c
-					else
-						symbol += c
-				}
-			}
-			i += 1
+ 
+	def isWhitespace(c : Char) = List(' ','\t','\r','\n') contains c
+ 
+    def readTree(pcfg : PCFG with PreProcessor) : NonTerminalNode = {	
+    
+		def readNode(stream : StringReader) : NonTerminalNode = {
+		  var ntStr = new StringBuffer()
+		  var c = stream.read.toChar
+		  while(!isWhitespace(c)) {ntStr append c; c = stream.read.toChar}
+		  while(isWhitespace(c)) {c = stream.read.toChar} 
+		  var kids = List[NonTerminalNode]()
+		  while(stream.ready) {
+			  c match {
+			   case '(' => kids ::= readNode(stream)
+			   case ')' => return ProtoTreeNode(NonTerminal(pcfg.addSymbol(ntStr.toString)),kids.reverse)
+			   case _ if isWhitespace(c) => {}
+			   case _ => {
+				   var termStr = new StringBuffer()
+				   while(c != ')') {
+				     termStr append c
+				     c = stream.read.toChar
+				   }
+				   return PreTerminalNode(NonTerminal(pcfg.addSymbol(ntStr.toString)),
+                                  			  TerminalNode(Terminal(pcfg.addTerm(termStr.toString))))
+			   }
+			  }
+			  c = stream.read.toChar
+		  }
+		  null
 		}
-		throw new DataParseException
-  }
+		var stringstream = new StringReader(raw)
+		stringstream.read 
+		readNode(stringstream)
+	}
+ 
 }
 
 

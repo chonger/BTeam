@@ -13,7 +13,7 @@ class InsideOutsideMaster(data : List[ParseTreeData],val iterations : Int, val p
   
   var ioSlave = new InsideOutsideAlgorithm(data,pcfg)
   
-  def getIOProbs(tree : ParseTree) = ioSlave.getIOProbs(tree)
+  def getIOProbs(tree : ParseTree) = {} //ioSlave.getIOProbs(tree)
   
   def map() = {
 	  ioSlave.run(Nil)
@@ -23,9 +23,11 @@ class InsideOutsideMaster(data : List[ParseTreeData],val iterations : Int, val p
 	 expectations.clear
 	 expectationTotals.clear
 	 logProb = 0.0
+  /**
 	 expectations ++= ioSlave.expectations
 	 expectationTotals ++= ioSlave.expectationTotals
 	 logProb += ioSlave.logProb
+  */
 	 maximize()
   }
   

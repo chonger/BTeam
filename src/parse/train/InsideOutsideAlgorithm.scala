@@ -6,13 +6,16 @@ import corpora.BTeamData
 import parse._
 
 class InsideOutsideAlgorithm(data : List[ParseTreeData], val pcfg : PCFG with PrintablePCFG) extends BTeamAlgorithm[ParseTreeData](data) {
-  
+
+  	def map() = {}
+	def reduce() = {}
+  	def run(args : List[String]) = {
+	 }
+ /**
 	var logProb = 0.0
 	val expectations = new HashMap[TreeRule,Double]()
 	val expectationTotals = new HashMap[(ParseTypes.Symbol,ParseTypes.Split),Double]()
  
-	def map() = {}
-	def reduce() = {}
 	def run(args : List[String]) = {
 	  expectations.clear
 	  expectationTotals.clear
@@ -177,5 +180,6 @@ class InsideOutsideAlgorithm(data : List[ParseTreeData], val pcfg : PCFG with Pr
 	  	  	addToMap(expectations,e._1,e._2 / totalProb)
 	  		addToMap(expectationTotals,(e._1.lhs,e._1.split),e._2 / totalProb)
 	  	}) 
-	}	 
+	}
+ */
 }
